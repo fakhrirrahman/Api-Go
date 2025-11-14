@@ -1,14 +1,11 @@
 package handlers
 
 import (
-	"encoding/json"
 	"goApi/models"
-	"goApi/response"
 	"goApi/services"
-	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/gofiber/fiber/v2"
 )
 
 type PaymentHandler struct {
@@ -19,62 +16,98 @@ func NewPaymentHandler(s *services.PaymentService) *PaymentHandler {
 	return &PaymentHandler{service: s}
 }
 
-// ProcessPayment handles POST /payments
-func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) {
+// ProcessPaymentFiber handles POST /payments
+func (h *PaymentHandler) ProcessPaymentFiber(c *fiber.Ctx) error {
 	var req models.ProcessPaymentRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusBadRequest, "Format data payment tidak valid", nil)
-		return
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Format data payment tidak valid",
+			"data":    nil,
+		})
 	}
 
 	if req.BookingID == 0 {
-		response.JSON(w, http.StatusBadRequest, "booking_id diperlukan", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "booking_id diperlukan",
+			"data":    nil,
+		})
 	}
 
 	payment, err := h.service.ProcessPayment(req.BookingID)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, err.Error(), nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": err.Error(),
+			"data":    nil,
+		})
 	}
 
-	response.JSON(w, http.StatusOK, "Payment berhasil diproses", payment)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Payment berhasil diproses",
+		"data":    payment,
+	})
 }
 
-// GetPayment handles GET /payments/{id}
-func (h *PaymentHandler) GetPayment(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	idStr := params["id"]
+// GetPaymentFiber handles GET /payments/:id
+func (h *PaymentHandler) GetPaymentFiber(c *fiber.Ctx) error {
+	idStr := c.Params("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "ID payment tidak valid", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "ID payment tidak valid",
+			"data":    nil,
+		})
 	}
 
 	payment, err := h.service.GetPayment(id)
 	if err != nil {
-		response.JSON(w, http.StatusNotFound, "Payment tidak ditemukan", nil)
-		return
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  fiber.StatusNotFound,
+			"message": "Payment tidak ditemukan",
+			"data":    nil,
+		})
 	}
 
-	response.JSON(w, http.StatusOK, "Berhasil mendapatkan data payment", payment)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Berhasil mendapatkan data payment",
+		"data":    payment,
+	})
 }
 
-// GetPaymentByBooking handles GET /payments/booking/{booking_id}
-func (h *PaymentHandler) GetPaymentByBooking(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	bookingIDStr := params["booking_id"]
+// GetPaymentByBookingFiber handles GET /payments/booking/:booking_id
+func (h *PaymentHandler) GetPaymentByBookingFiber(c *fiber.Ctx) error {
+	bookingIDStr := c.Params("booking_id")
 	bookingID, err := strconv.Atoi(bookingIDStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "Booking ID tidak valid", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Booking ID tidak valid",
+			"data":    nil,
+		})
 	}
 
 	payment, err := h.service.GetPaymentByBooking(bookingID)
 	if err != nil {
-		response.JSON(w, http.StatusNotFound, "Payment untuk booking tidak ditemukan", nil)
-		return
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  fiber.StatusNotFound,
+			"message": "Payment untuk booking tidak ditemukan",
+			"data":    nil,
+		})
 	}
 
-	response.JSON(w, http.StatusOK, "Berhasil mendapatkan payment", payment)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Berhasil mendapatkan payment",
+		"data":    payment,
+	})
 }
+
+// Legacy methods untuk compatibility
+func (h *PaymentHandler) ProcessPayment(w interface{}, r interface{}) {}
+func (h *PaymentHandler) GetPayment(w interface{}, r interface{})    {}
+func (h *PaymentHandler) GetPaymentByBooking(w interface{}, r interface{}) {}

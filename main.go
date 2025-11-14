@@ -3,14 +3,17 @@ package main
 import (
 	"goApi/routes"
 	"log"
-	"net/http"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	r := routes.SetupRoutes()
+	app := fiber.New()
+
+	routes.SetupRoutes(app)
 
 	log.Println("Server berjalan pada http://localhost:8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	if err := app.Listen(":8080"); err != nil {
 		log.Fatal(err)
 	}
 }

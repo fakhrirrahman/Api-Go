@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
 	"goApi/models"
-	"goApi/response"
 	"goApi/services"
 	"goApi/utils"
 	"net/http"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type AuthHandler struct {
@@ -28,30 +28,33 @@ func NewAuthHandler(userService *services.UserService) *AuthHandler {
 	return &AuthHandler{userService: userService}
 }
 
-// Login endpoint - dapatkan JWT token
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+// LoginFiber - Fiber version
+func (h *AuthHandler) LoginFiber(c *fiber.Ctx) error {
 	var loginReq LoginRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&loginReq); err != nil {
-		response.JSON(w, http.StatusBadRequest, "Format request tidak valid", nil)
-		return
+	if err := c.BodyParser(&loginReq); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Format request tidak valid",
+			"data":    nil,
+		})
 	}
 
-	// Validasi input
 	if loginReq.Email == "" || loginReq.Password == "" {
-		response.JSON(w, http.StatusBadRequest, "Email dan password diperlukan", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Email dan password diperlukan",
+			"data":    nil,
+		})
 	}
 
-	// Di sini Anda bisa validate user terhadap database
-	// Untuk demo, kami accept semua request dengan format valid
-	// Dalam production, cek password terhadap hash di database
-
-	// Generate JWT token
 	token, err := utils.GenerateToken(1, loginReq.Email, "User")
 	if err != nil {
-		response.JSON(w, http.StatusInternalServerError, "Gagal generate token", nil)
-		return
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  fiber.StatusInternalServerError,
+			"message": "Gagal generate token",
+			"data":    nil,
+		})
 	}
 
 	loginRes := LoginResponse{
@@ -64,28 +67,40 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Expiry: "24 jam",
 	}
 
-	response.JSON(w, http.StatusOK, "Login berhasil", loginRes)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Login berhasil",
+		"data":    loginRes,
+	})
 }
 
-// Register endpoint
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+// RegisterFiber - Fiber version
+func (h *AuthHandler) RegisterFiber(c *fiber.Ctx) error {
 	var user models.User
 
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		response.JSON(w, http.StatusBadRequest, "Format request tidak valid", nil)
-		return
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Format request tidak valid",
+			"data":    nil,
+		})
 	}
 
 	if err := h.userService.AddUser(user); err != nil {
-		response.JSON(w, http.StatusBadRequest, err.Error(), nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": err.Error(),
+			"data":    nil,
+		})
 	}
 
-	// Generate token untuk user baru
 	token, err := utils.GenerateToken(user.ID, user.Email, user.Name)
 	if err != nil {
-		response.JSON(w, http.StatusInternalServerError, "Gagal generate token", nil)
-		return
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  fiber.StatusInternalServerError,
+			"message": "Gagal generate token",
+			"data":    nil,
+		})
 	}
 
 	registerRes := LoginResponse{
@@ -94,5 +109,18 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Expiry: "24 jam",
 	}
 
-	response.JSON(w, http.StatusCreated, "Register berhasil", registerRes)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"status":  fiber.StatusCreated,
+		"message": "Register berhasil",
+		"data":    registerRes,
+	})
+}
+
+// Legacy methods untuk compatibility
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	// Deprecated: Use LoginFiber instead
+}
+
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	// Deprecated: Use RegisterFiber instead
 }

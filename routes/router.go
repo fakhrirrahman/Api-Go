@@ -2,42 +2,41 @@ package routes
 
 import (
 	"goApi/handlers"
+	"goApi/middleware"
 	"goApi/repositories"
 	"goApi/services"
 
-	"github.com/gorilla/mux"
+	"github.com/gofiber/fiber/v2"
 )
 
-func SetupRoutes() *mux.Router {
-	r := mux.NewRouter()
-
+func SetupRoutes(app *fiber.App) {
 	userRepo := repositories.NewUserRepository()
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
 	authHandler := handlers.NewAuthHandler(userService)
 
 	// Auth endpoints (no JWT required)
-	r.HandleFunc("/auth/login", authHandler.Login).Methods("POST")
-	r.HandleFunc("/auth/register", authHandler.Register).Methods("POST")
-	r.HandleFunc("/users/{id}", userHandler.GetUser).Methods("GET")
-	r.HandleFunc("/users", userHandler.CreateUser).Methods("POST")
+	app.Post("/auth/login", authHandler.LoginFiber)
+	app.Post("/auth/register", authHandler.RegisterFiber)
+	app.Get("/users/:id", userHandler.GetUserFiber)
+	app.Post("/users", userHandler.CreateUserFiber)
 
 	bookingRepo := repositories.NewBookingRepository()
 	bookingService := services.NewBookingService(bookingRepo)
 	bookingHandler := handlers.NewBookingHandler(bookingService)
 
-	r.HandleFunc("/bookings", bookingHandler.ListBookings).Methods("GET")
-	r.HandleFunc("/bookings", bookingHandler.CreateBooking).Methods("POST")
-	r.HandleFunc("/bookings/{id}", bookingHandler.GetBooking).Methods("GET")
-	r.HandleFunc("/bookings/check-availability", bookingHandler.CheckAvailability).Methods("GET")
+	// Booking endpoints (with JWT middleware)
+	app.Get("/bookings", middleware.JWTMiddlewareFiber, bookingHandler.ListBookingsFiber)
+	app.Post("/bookings", middleware.JWTMiddlewareFiber, bookingHandler.CreateBookingFiber)
+	app.Get("/bookings/:id", middleware.JWTMiddlewareFiber, bookingHandler.GetBookingFiber)
+	app.Get("/bookings/check-availability", middleware.JWTMiddlewareFiber, bookingHandler.CheckAvailabilityFiber)
 
 	paymentRepo := repositories.NewPaymentRepository()
 	paymentService := services.NewPaymentService(paymentRepo, bookingRepo)
 	paymentHandler := handlers.NewPaymentHandler(paymentService)
 
-	r.HandleFunc("/payments", paymentHandler.ProcessPayment).Methods("POST")
-	r.HandleFunc("/payments/{id}", paymentHandler.GetPayment).Methods("GET")
-	r.HandleFunc("/payments/booking/{booking_id}", paymentHandler.GetPaymentByBooking).Methods("GET")
-
-	return r
+	// Payment endpoints (with JWT middleware)
+	app.Post("/payments", middleware.JWTMiddlewareFiber, paymentHandler.ProcessPaymentFiber)
+	app.Get("/payments/:id", middleware.JWTMiddlewareFiber, paymentHandler.GetPaymentFiber)
+	app.Get("/payments/booking/:booking_id", middleware.JWTMiddlewareFiber, paymentHandler.GetPaymentByBookingFiber)
 }

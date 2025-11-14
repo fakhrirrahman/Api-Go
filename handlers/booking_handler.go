@@ -1,15 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
 	"goApi/models"
-	"goApi/response"
 	"goApi/services"
-	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/gofiber/fiber/v2"
 )
 
 type BookingHandler struct {
@@ -20,95 +17,145 @@ func NewBookingHandler(s *services.BookingService) *BookingHandler {
 	return &BookingHandler{service: s}
 }
 
-// CreateBooking handles POST /bookings
-func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
+// CreateBookingFiber handles POST /bookings
+func (h *BookingHandler) CreateBookingFiber(c *fiber.Ctx) error {
 	var req models.CreateBookingRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusBadRequest, "Format data booking tidak valid", nil)
-		return
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Format data booking tidak valid",
+			"data":    nil,
+		})
 	}
 
 	id, err := h.service.CreateBooking(req)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, err.Error(), nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": err.Error(),
+			"data":    nil,
+		})
 	}
 
 	booking, _ := h.service.GetBooking(id)
-	response.JSON(w, http.StatusCreated, "Booking berhasil dibuat", booking)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"status":  fiber.StatusCreated,
+		"message": "Booking berhasil dibuat",
+		"data":    booking,
+	})
 }
 
-// GetBooking handles GET /bookings/{id}
-func (h *BookingHandler) GetBooking(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	idStr := params["id"]
+// GetBookingFiber handles GET /bookings/:id
+func (h *BookingHandler) GetBookingFiber(c *fiber.Ctx) error {
+	idStr := c.Params("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "ID booking tidak valid", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "ID booking tidak valid",
+			"data":    nil,
+		})
 	}
 
 	booking, err := h.service.GetBooking(id)
 	if err != nil {
-		response.JSON(w, http.StatusNotFound, "Booking tidak ditemukan", nil)
-		return
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  fiber.StatusNotFound,
+			"message": "Booking tidak ditemukan",
+			"data":    nil,
+		})
 	}
 
-	response.JSON(w, http.StatusOK, "Berhasil mendapatkan booking", booking)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Berhasil mendapatkan booking",
+		"data":    booking,
+	})
 }
 
-// ListBookings handles GET /bookings
-func (h *BookingHandler) ListBookings(w http.ResponseWriter, r *http.Request) {
+// ListBookingsFiber handles GET /bookings
+func (h *BookingHandler) ListBookingsFiber(c *fiber.Ctx) error {
 	bookings, err := h.service.ListBookings()
 	if err != nil {
-		response.JSON(w, http.StatusInternalServerError, "Gagal mendapatkan list booking", nil)
-		return
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  fiber.StatusInternalServerError,
+			"message": "Gagal mendapatkan list booking",
+			"data":    nil,
+		})
 	}
 
-	response.JSON(w, http.StatusOK, "Berhasil mendapatkan list booking", bookings)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Berhasil mendapatkan list booking",
+		"data":    bookings,
+	})
 }
 
-// CheckAvailability handles GET /bookings/check-availability?field_id=1&start_time=2025-10-25T10:00:00Z&end_time=2025-10-25T12:00:00Z
-func (h *BookingHandler) CheckAvailability(w http.ResponseWriter, r *http.Request) {
-	fieldIDStr := r.URL.Query().Get("field_id")
-	startTimeStr := r.URL.Query().Get("start_time")
-	endTimeStr := r.URL.Query().Get("end_time")
+// CheckAvailabilityFiber handles GET /bookings/check-availability?field_id=1&start_time=...&end_time=...
+func (h *BookingHandler) CheckAvailabilityFiber(c *fiber.Ctx) error {
+	fieldIDStr := c.Query("field_id")
+	startTimeStr := c.Query("start_time")
+	endTimeStr := c.Query("end_time")
 
 	if fieldIDStr == "" || startTimeStr == "" || endTimeStr == "" {
-		response.JSON(w, http.StatusBadRequest, "Parameter field_id, start_time, dan end_time diperlukan", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Parameter field_id, start_time, dan end_time diperlukan",
+			"data":    nil,
+		})
 	}
 
 	fieldID, err := strconv.Atoi(fieldIDStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "Field ID tidak valid", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Field ID tidak valid",
+			"data":    nil,
+		})
 	}
 
 	startTime, err := parseTime(startTimeStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "Format start_time tidak valid", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Format start_time tidak valid",
+			"data":    nil,
+		})
 	}
 
 	endTime, err := parseTime(endTimeStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "Format end_time tidak valid", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Format end_time tidak valid",
+			"data":    nil,
+		})
 	}
 
 	available, err := h.service.CheckAvailability(fieldID, startTime, endTime)
 	if err != nil {
-		response.JSON(w, http.StatusInternalServerError, err.Error(), nil)
-		return
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  fiber.StatusInternalServerError,
+			"message": err.Error(),
+			"data":    nil,
+		})
 	}
 
-	data := map[string]bool{
-		"available": available,
-	}
-	response.JSON(w, http.StatusOK, "Pengecekan ketersediaan berhasil", data)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Pengecekan ketersediaan berhasil",
+		"data": fiber.Map{
+			"available": available,
+		},
+	})
 }
 
 func parseTime(timeStr string) (time.Time, error) {
 	return time.Parse(time.RFC3339, timeStr)
 }
+
+// Legacy methods untuk compatibility
+func (h *BookingHandler) CreateBooking(w interface{}, r interface{}) {}
+func (h *BookingHandler) GetBooking(w interface{}, r interface{})    {}
+func (h *BookingHandler) ListBookings(w interface{}, r interface{}) {}
+func (h *BookingHandler) CheckAvailability(w interface{}, r interface{}) {}

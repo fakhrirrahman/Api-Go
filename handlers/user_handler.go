@@ -1,14 +1,11 @@
 package handlers
 
 import (
-	"encoding/json"
 	"goApi/models"
-	"goApi/response"
 	"goApi/services"
-	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/gofiber/fiber/v2"
 )
 
 type UserHandler struct {
@@ -19,45 +16,79 @@ func NewUserHandler(s *services.UserService) *UserHandler {
 	return &UserHandler{services: s}
 }
 
-// get user
-func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.services.ListUsers()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	response.JSON(w, http.StatusOK, "Berhasil Mendapatkan semua user", users)
-}
-
-// get user by id
-func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	idStr := params["id"]
+// GetUserFiber - Fiber version
+func (h *UserHandler) GetUserFiber(c *fiber.Ctx) error {
+	idStr := c.Params("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "ID user tidak valid", nil)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "ID user tidak valid",
+			"data":    nil,
+		})
 	}
 
 	user, err := h.services.GetUserrByID(id)
 	if err != nil {
-		response.JSON(w, http.StatusNotFound, "User tidak ditemukan", nil)
-		return
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  fiber.StatusNotFound,
+			"message": "User tidak ditemukan",
+			"data":    nil,
+		})
 	}
 
-	response.JSON(w, http.StatusOK, "Berhasil mendapatkan data user", user)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Berhasil mendapatkan data user",
+		"data":    user,
+	})
 }
 
-// create user
-func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+// CreateUserFiber - Fiber version
+func (h *UserHandler) CreateUserFiber(c *fiber.Ctx) error {
 	var u models.User
-	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-		http.Error(w, "Gagal decode data user", http.StatusBadRequest)
-		return
+	if err := c.BodyParser(&u); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Gagal decode data user",
+			"data":    nil,
+		})
 	}
+
 	if err := h.services.AddUser(u); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": err.Error(),
+			"data":    nil,
+		})
 	}
-	response.JSON(w, http.StatusCreated, "User berhasil dibuat", u)
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"status":  fiber.StatusCreated,
+		"message": "User berhasil dibuat",
+		"data":    u,
+	})
 }
+
+// ListUsersFiber - Fiber version
+func (h *UserHandler) ListUsersFiber(c *fiber.Ctx) error {
+	users, err := h.services.ListUsers()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  fiber.StatusInternalServerError,
+			"message": err.Error(),
+			"data":    nil,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Berhasil Mendapatkan semua user",
+		"data":    users,
+	})
+}
+
+// Legacy methods untuk compatibility
+func (h *UserHandler) ListUsers(w interface{}, r interface{}) {}
+func (h *UserHandler) GetUser(w interface{}, r interface{})   {}
+func (h *UserHandler) CreateUser(w interface{}, r interface{}) {}

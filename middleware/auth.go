@@ -1,38 +1,46 @@
 package middleware
 
 import (
-	"goApi/response"
 	"goApi/utils"
-	"net/http"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
 )
 
-func JWTMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			response.JSON(w, http.StatusUnauthorized, "Authorization header diperlukan", nil)
-			return
-		}
+// JWTMiddlewareFiber - Fiber version
+func JWTMiddlewareFiber(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  fiber.StatusUnauthorized,
+			"message": "Authorization header diperlukan",
+			"data":    nil,
+		})
+	}
 
-		// Extract token from "Bearer <token>"
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		if tokenString == authHeader {
-			response.JSON(w, http.StatusUnauthorized, "Format authorization tidak valid", nil)
-			return
-		}
+	// Extract token from "Bearer <token>"
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	if tokenString == authHeader {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  fiber.StatusUnauthorized,
+			"message": "Format authorization tidak valid",
+			"data":    nil,
+		})
+	}
 
-		claims, err := utils.ValidateToken(tokenString)
-		if err != nil {
-			response.JSON(w, http.StatusUnauthorized, "Token tidak valid: "+err.Error(), nil)
-			return
-		}
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  fiber.StatusUnauthorized,
+			"message": "Token tidak valid: " + err.Error(),
+			"data":    nil,
+		})
+	}
 
-		// Store claims in context for use in handlers
-		r.Header.Set("X-User-ID", string(rune(claims.UserID)))
-		r.Header.Set("X-User-Email", claims.Email)
-		r.Header.Set("X-User-Name", claims.Name)
+	// Store claims in context
+	c.Locals("user_id", claims.UserID)
+	c.Locals("user_email", claims.Email)
+	c.Locals("user_name", claims.Name)
 
-		next.ServeHTTP(w, r)
-	})
+	return c.Next()
 }
