@@ -1,6 +1,8 @@
 package main
 
 import (
+	"goApi/config"
+	"goApi/database"
 	"goApi/routes"
 	"log"
 
@@ -8,6 +10,15 @@ import (
 )
 
 func main() {
+	// Load config
+	cfg := config.LoadConfig()
+
+	// Initialize database
+	if err := database.Init(cfg); err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+	defer database.Close()
+
 	app := fiber.New()
 
 	routes.SetupRoutes(app)

@@ -89,6 +89,6 @@ func (h *UserHandler) ListUsersFiber(c *fiber.Ctx) error {
 }
 
 // Legacy methods untuk compatibility
-func (h *UserHandler) ListUsers(w interface{}, r interface{}) {}
-func (h *UserHandler) GetUser(w interface{}, r interface{})   {}
+func (h *UserHandler) ListUsers(w interface{}, r interface{})  {}
+func (h *UserHandler) GetUser(w interface{}, r interface{})    {}
 func (h *UserHandler) CreateUser(w interface{}, r interface{}) {}

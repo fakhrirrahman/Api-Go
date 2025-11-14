@@ -108,6 +108,6 @@ func (h *PaymentHandler) GetPaymentByBookingFiber(c *fiber.Ctx) error {
 }
 
 // Legacy methods untuk compatibility
-func (h *PaymentHandler) ProcessPayment(w interface{}, r interface{}) {}
-func (h *PaymentHandler) GetPayment(w interface{}, r interface{})    {}
+func (h *PaymentHandler) ProcessPayment(w interface{}, r interface{})      {}
+func (h *PaymentHandler) GetPayment(w interface{}, r interface{})          {}
 func (h *PaymentHandler) GetPaymentByBooking(w interface{}, r interface{}) {}

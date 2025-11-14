@@ -155,7 +155,7 @@ func parseTime(timeStr string) (time.Time, error) {
 }
 
 // Legacy methods untuk compatibility
-func (h *BookingHandler) CreateBooking(w interface{}, r interface{}) {}
-func (h *BookingHandler) GetBooking(w interface{}, r interface{})    {}
-func (h *BookingHandler) ListBookings(w interface{}, r interface{}) {}
+func (h *BookingHandler) CreateBooking(w interface{}, r interface{})     {}
+func (h *BookingHandler) GetBooking(w interface{}, r interface{})        {}
+func (h *BookingHandler) ListBookings(w interface{}, r interface{})      {}
 func (h *BookingHandler) CheckAvailability(w interface{}, r interface{}) {}
