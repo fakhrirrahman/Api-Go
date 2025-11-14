@@ -34,10 +34,18 @@ func (s *PaymentService) ProcessPayment(bookingID int) (models.Payment, error) {
 	payment := models.Payment{
 		BookingID: bookingID,
 		Amount:    1000, // Mock price per hour in cents
-		Status:    "paid",
+		Status:    "pending",
 	}
 
 	id, err := s.paymentRepo.Create(payment)
+	if err != nil {
+		return models.Payment{}, err
+	}
+
+	// Update payment status to paid (mock payment success)
+	payment.ID = id
+	payment.Status = "paid"
+	err = s.paymentRepo.Update(payment)
 	if err != nil {
 		return models.Payment{}, err
 	}

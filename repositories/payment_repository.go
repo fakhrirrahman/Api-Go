@@ -25,7 +25,9 @@ func NewPaymentRepository() PaymentRepository {
 
 func (r *paymentRepository) Create(payment models.Payment) (int, error) {
 	payment.ID = len(r.data) + 1
-	payment.Status = "pending"
+	if payment.Status == "" {
+		payment.Status = "pending"
+	}
 	payment.CreatedAt = time.Now().String()
 	payment.UpdatedAt = time.Now().String()
 
