@@ -28,6 +28,15 @@ func NewAuthHandler(userService *services.UserService) *AuthHandler {
 	return &AuthHandler{userService: userService}
 }
 
+// LoginFiber godoc
+// @Summary Login user
+// @Description Login with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param login body LoginRequest true "Login credentials"
+// @Success 200 {object} LoginResponse
+// @Router /auth/login [post]
 // LoginFiber - Fiber version
 func (h *AuthHandler) LoginFiber(c *fiber.Ctx) error {
 	var loginReq LoginRequest
@@ -74,6 +83,15 @@ func (h *AuthHandler) LoginFiber(c *fiber.Ctx) error {
 	})
 }
 
+// RegisterFiber godoc
+// @Summary Register user
+// @Description Register a new user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User data"
+// @Success 201 {object} LoginResponse
+// @Router /auth/register [post]
 // RegisterFiber - Fiber version
 func (h *AuthHandler) RegisterFiber(c *fiber.Ctx) error {
 	var user models.User

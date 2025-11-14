@@ -1,0 +1,273 @@
+basePath: /
+definitions:
+  handlers.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  handlers.LoginResponse:
+    properties:
+      expiry:
+        type: string
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  models.Booking:
+    properties:
+      created_at:
+        type: string
+      end_time:
+        type: string
+      field_id:
+        type: integer
+      id:
+        type: integer
+      start_time:
+        type: string
+      status:
+        description: pending, paid, cancelled
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.CreateBookingRequest:
+    properties:
+      end_time:
+        type: string
+      field_id:
+        type: integer
+      start_time:
+        type: string
+    type: object
+  models.Payment:
+    properties:
+      amount:
+        type: integer
+      booking_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      status:
+        description: pending, paid, failed
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.ProcessPaymentRequest:
+    properties:
+      booking_id:
+        type: integer
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API for booking sports fields
+  title: Booking API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.LoginResponse'
+      summary: Login user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.LoginResponse'
+      summary: Register user
+      tags:
+      - auth
+  /bookings:
+    get:
+      description: Get list of all bookings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Booking'
+            type: array
+      summary: List all bookings
+      tags:
+      - bookings
+    post:
+      consumes:
+      - application/json
+      description: Create a booking for a field
+      parameters:
+      - description: Booking request
+        in: body
+        name: booking
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Booking'
+      summary: Create a new booking
+      tags:
+      - bookings
+  /bookings/{id}:
+    get:
+      description: Get a specific booking
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Booking'
+      summary: Get booking by ID
+      tags:
+      - bookings
+  /bookings/check-availability:
+    get:
+      description: Check if a field is available for booking
+      parameters:
+      - description: Field ID
+        in: query
+        name: field_id
+        required: true
+        type: integer
+      - description: Start time
+        in: query
+        name: start_time
+        required: true
+        type: string
+      - description: End time
+        in: query
+        name: end_time
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: Check field availability
+      tags:
+      - bookings
+  /payments:
+    post:
+      consumes:
+      - application/json
+      description: Process payment for a booking
+      parameters:
+      - description: Payment request
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProcessPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Payment'
+      summary: Process payment
+      tags:
+      - payments
+  /payments/{id}:
+    get:
+      description: Get a specific payment
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Payment'
+      summary: Get payment by ID
+      tags:
+      - payments
+  /payments/booking/{booking_id}:
+    get:
+      description: Get payment for a specific booking
+      parameters:
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Payment'
+      summary: Get payment by booking ID
+      tags:
+      - payments
+swagger: "2.0"

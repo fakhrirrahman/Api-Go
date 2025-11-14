@@ -17,6 +17,15 @@ func NewBookingHandler(s *services.BookingService) *BookingHandler {
 	return &BookingHandler{service: s}
 }
 
+// CreateBookingFiber godoc
+// @Summary Create a new booking
+// @Description Create a booking for a field
+// @Tags bookings
+// @Accept json
+// @Produce json
+// @Param booking body models.CreateBookingRequest true "Booking request"
+// @Success 201 {object} models.Booking
+// @Router /bookings [post]
 // CreateBookingFiber handles POST /bookings
 func (h *BookingHandler) CreateBookingFiber(c *fiber.Ctx) error {
 	var req models.CreateBookingRequest
@@ -45,6 +54,14 @@ func (h *BookingHandler) CreateBookingFiber(c *fiber.Ctx) error {
 	})
 }
 
+// GetBookingFiber godoc
+// @Summary Get booking by ID
+// @Description Get a specific booking
+// @Tags bookings
+// @Produce json
+// @Param id path int true "Booking ID"
+// @Success 200 {object} models.Booking
+// @Router /bookings/{id} [get]
 // GetBookingFiber handles GET /bookings/:id
 func (h *BookingHandler) GetBookingFiber(c *fiber.Ctx) error {
 	idStr := c.Params("id")
@@ -73,6 +90,13 @@ func (h *BookingHandler) GetBookingFiber(c *fiber.Ctx) error {
 	})
 }
 
+// ListBookingsFiber godoc
+// @Summary List all bookings
+// @Description Get list of all bookings
+// @Tags bookings
+// @Produce json
+// @Success 200 {array} models.Booking
+// @Router /bookings [get]
 // ListBookingsFiber handles GET /bookings
 func (h *BookingHandler) ListBookingsFiber(c *fiber.Ctx) error {
 	bookings, err := h.service.ListBookings()
@@ -91,6 +115,16 @@ func (h *BookingHandler) ListBookingsFiber(c *fiber.Ctx) error {
 	})
 }
 
+// CheckAvailabilityFiber godoc
+// @Summary Check field availability
+// @Description Check if a field is available for booking
+// @Tags bookings
+// @Produce json
+// @Param field_id query int true "Field ID"
+// @Param start_time query string true "Start time"
+// @Param end_time query string true "End time"
+// @Success 200 {object} map[string]bool
+// @Router /bookings/check-availability [get]
 // CheckAvailabilityFiber handles GET /bookings/check-availability?field_id=1&start_time=...&end_time=...
 func (h *BookingHandler) CheckAvailabilityFiber(c *fiber.Ctx) error {
 	fieldIDStr := c.Query("field_id")

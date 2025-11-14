@@ -16,6 +16,15 @@ func NewPaymentHandler(s *services.PaymentService) *PaymentHandler {
 	return &PaymentHandler{service: s}
 }
 
+// ProcessPaymentFiber godoc
+// @Summary Process payment
+// @Description Process payment for a booking
+// @Tags payments
+// @Accept json
+// @Produce json
+// @Param payment body models.ProcessPaymentRequest true "Payment request"
+// @Success 200 {object} models.Payment
+// @Router /payments [post]
 // ProcessPaymentFiber handles POST /payments
 func (h *PaymentHandler) ProcessPaymentFiber(c *fiber.Ctx) error {
 	var req models.ProcessPaymentRequest
@@ -51,6 +60,14 @@ func (h *PaymentHandler) ProcessPaymentFiber(c *fiber.Ctx) error {
 	})
 }
 
+// GetPaymentFiber godoc
+// @Summary Get payment by ID
+// @Description Get a specific payment
+// @Tags payments
+// @Produce json
+// @Param id path int true "Payment ID"
+// @Success 200 {object} models.Payment
+// @Router /payments/{id} [get]
 // GetPaymentFiber handles GET /payments/:id
 func (h *PaymentHandler) GetPaymentFiber(c *fiber.Ctx) error {
 	idStr := c.Params("id")
@@ -79,6 +96,14 @@ func (h *PaymentHandler) GetPaymentFiber(c *fiber.Ctx) error {
 	})
 }
 
+// GetPaymentByBookingFiber godoc
+// @Summary Get payment by booking ID
+// @Description Get payment for a specific booking
+// @Tags payments
+// @Produce json
+// @Param booking_id path int true "Booking ID"
+// @Success 200 {object} models.Payment
+// @Router /payments/booking/{booking_id} [get]
 // GetPaymentByBookingFiber handles GET /payments/booking/:booking_id
 func (h *PaymentHandler) GetPaymentByBookingFiber(c *fiber.Ctx) error {
 	bookingIDStr := c.Params("booking_id")
